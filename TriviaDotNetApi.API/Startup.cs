@@ -18,14 +18,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using TriviaDotNetApi.Infrastructure.EntityFramework.ServiceHelpers;
-using TriviaDotNetApi.Infrastructure.EntityFramework.Context;
-using Autofac.Extensions.DependencyInjection;
 using TriviaDotNetApi.Infrastructure.EntityFramework.Repository;
 using TriviaDotNetApi.Domain.AggregatesModel;
 using TriviaDotNetApi.Infrastructure.EntityFramework.Extensions;
-using Saunter;
-using Saunter.AsyncApiSchema.v2;
-using Saunter.Generation;
 using TriviaDotNetApi.Application.Services;
 
 namespace TriviaDotNetApi.API
@@ -48,20 +43,13 @@ namespace TriviaDotNetApi.API
 
             services.AddCustomSwagger(Configuration)
                 .AddEFDbContext(Configuration)
-                //.AddPersistenceEventDbContext(Configuration)
-                //.AddLocalPersistenceServices(ApplicationAssembly)
-                //.AddCommonEventBusServices()
-                //.AddIntegrationEvents(Configuration)
                 .AddHealthChecks(Configuration)
-                //.AddScopeManagement(Configuration)
                 .AddAutoMapper(cfg => cfg.AllowNullCollections = true, Assembly.Load(ApplicationAssembly))
                 .AddLocalization(options => options.ResourcesPath = "Resources")
                 .AddCustomMvc().AddControllers()
                     .AddViewLocalization()
                     .AddDataAnnotationsLocalization()
                     .AddApplicationPart(typeof(Startup).Assembly);
-
-            //services.AddTransient<IIntegrationEventHeaderBuilder, MessageHeaderBuilder>();
 
             services.AddLogging();
 
@@ -70,11 +58,10 @@ namespace TriviaDotNetApi.API
                 var supportedCultures = new List<CultureInfo>
                     {
                         new CultureInfo("en-US"),
-                        new CultureInfo("fr"),
                         new CultureInfo("pt-BR")
                     };
 
-                options.DefaultRequestCulture = new RequestCulture(Environment.GetEnvironmentVariable("DEFAULT_CULTURE") ?? "pt-BR");
+                options.DefaultRequestCulture = new RequestCulture(Environment.GetEnvironmentVariable("DEFAULT_CULTURE") ?? "en-US");
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
@@ -84,33 +71,6 @@ namespace TriviaDotNetApi.API
                 options.Level = CompressionLevel.Optimal;
             });
 
-
-            services.AddAsyncApiSchemaGeneration(options =>
-            {
-                // Specify example type(s) from assemblies to scan.
-                options.AssemblyMarkerTypes = Assembly.Load("TriviaDotNetApi.Application").GetExportedTypes();
-
-                // Build as much (or as little) of the AsyncApi document as you like.
-                // Saunter will generate Channels, Operations, Messages, etc, but you
-                // may want to specify Info here.
-                options.AsyncApi = new AsyncApiDocument
-                {
-                    Info = new Info("TriviaDotNetApi API", "1.0.0")
-                    {
-                        Description = "TriviaDotNetApi Async Interface.",
-                        License = new License("Apache 2.0")
-                        {
-                            Url = "https://www.apache.org/licenses/LICENSE-2.0"
-                        }
-                    }
-                    ,
-                    //Servers =
-                    //    {
-                    //        { "RabbitMQ", new Server("localhost", "amqp") }
-                    //    }
-                };
-            });
-
             services.AddResponseCompression(options =>
             {
                 options.EnableForHttps = true;
@@ -118,13 +78,8 @@ namespace TriviaDotNetApi.API
 
             });
 
-
-
             services.AddMvc();
 
-            /*
-                Versionamento de serviços
-            */
             services.AddApiVersioning(
                     options =>
                     {
@@ -139,10 +94,6 @@ namespace TriviaDotNetApi.API
                     options.GroupNameFormat = "'v'VVV";
                     options.SubstituteApiVersionInUrl = true;
                 });
-            /*
-              Fim Versionamento de serviços
-            */
-
 
             services.AddMvc().AddJsonOptions(options => {
 
@@ -156,9 +107,6 @@ namespace TriviaDotNetApi.API
         public void ConfigureContainer(ContainerBuilder builder)
         {
             builder.AddMediatorModules(Configuration);
-            //builder.AddTenantInAutoFac(Configuration);
-            //builder.AddMassTransitModule(GetEventBusConfiguration(Configuration, nameof(EFDbContext)));
-
             builder.RegisterType<TriviaDotNetApiSingleActionRepository>()
                 .As<ITriviaSingleActionRepository>()
                 .InstancePerLifetimeScope();
@@ -185,21 +133,6 @@ namespace TriviaDotNetApi.API
                 .Replace("__DB_HOST__", Environment.GetEnvironmentVariable("DB_HOST"));
         }
 
-        //private EventbusConfiguration GetEventBusConfiguration(IConfiguration configuration, string dbContextName)
-        //{
-        //    var consumersAssembly = Assembly.Load(ApplicationAssembly);
-
-        //    return new EventbusConfiguration(
-        //       configuration["EventBusConnection"],
-        //       "/",
-        //       configuration["EventBusUserName"],
-        //       configuration["EventBusPassword"],
-        //       consumersAssembly,
-        //       appConfig: configuration,
-        //       dbContextName: dbContextName
-        //   );
-        //}
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostEnvironment env, IApiVersionDescriptionProvider provider)
         {
@@ -218,14 +151,11 @@ namespace TriviaDotNetApi.API
 
             var pathBase = Configuration["PATH_BASE"];
             if (!string.IsNullOrEmpty(pathBase))
-            {
-                //loggerFactory.CreateLogger<Startup>().LogDebug("Using PATH BASE '{pathBase}'", pathBase);
+            {              
                 app.UsePathBase(pathBase);
             }
 
             app.UseCors("CorsPolicy");
-
-            //app.UseMvc();
 
             app.UseRouting();
 
@@ -235,18 +165,12 @@ namespace TriviaDotNetApi.API
 
             AddSwagger(app, pathBase, provider);
 
-            //app.UseMultitenancy(nameof(EFDbContext), Configuration);
-
-            app.UseMiddleware<AsyncApiMiddleware>();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
             });
 
             PerformPersistenceMigration(app);
-
-            //ConfigureEventBus(app);
         }
 
         private static void PerformPersistenceMigration(IApplicationBuilder app)
@@ -259,13 +183,12 @@ namespace TriviaDotNetApi.API
             var supportedCultures = new[]
             {
                 new CultureInfo("en-US"),
-                new CultureInfo("fr"),
                 new CultureInfo("pt-BR")
             };
 
             app.UseRequestLocalization(new RequestLocalizationOptions
             {
-                DefaultRequestCulture = new RequestCulture(Environment.GetEnvironmentVariable("DEFAULT_CULTURE") ?? "pt-BR"),
+                DefaultRequestCulture = new RequestCulture(Environment.GetEnvironmentVariable("DEFAULT_CULTURE") ?? "en-US"),
                 // Formatting numbers, dates, etc.
                 SupportedCultures = supportedCultures,
                 // UI strings that we have localized.
@@ -303,29 +226,10 @@ namespace TriviaDotNetApi.API
                             options.SwaggerEndpoint($"{ (!string.IsNullOrEmpty(pathBase) ? pathBase : string.Empty) }/swagger/v1/swagger.json", "TriviaDotNetApi.API V1");
                     }
 
-                    /*
-
-                    Depois de Migrar todo front end para v2, deve trocar o foreach acima por este aqui
-
-                    foreach (var description in provider.ApiVersionDescriptions)
-                    {       
-                        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());                       
-                    }
-                    
-                    */
-
                     options.OAuthClientId("TriviaDotNetApi");
                     options.OAuthAppName("Trivia Swagger UI");
                 });
         }
-
-        //private void ConfigureEventBus(IApplicationBuilder app)
-        //{
-        //    var eventBus = app.ApplicationServices.GetRequiredService<IBusControl>();
-
-        //    eventBus.Start();
-        //}
-
     }
     static class CustomExtensionsMethods
     {
@@ -336,28 +240,11 @@ namespace TriviaDotNetApi.API
 
             hcBuilder.AddCheck("self", () => HealthCheckResult.Healthy());
 
-            //hcBuilder
-            //    .AddSqlServer(
-            //        configuration["ConnectionStrings:IntegrationPersistenceEventDbContext"],
-            //        name: "integration-persistence-DB-check",
-            //        tags: new string[] { "ipdb" });
-
             hcBuilder
                 .AddSqlServer(
                     configuration["ConnectionStrings:EFDbContext"],
-                    name: "mes-DB-check",
-                    tags: new string[] { "mesdb" });
-
-            //amqp://user:pass@host:10000/vhost
-            //hcBuilder
-            //        .AddRabbitMQ(
-            //            String.Format("amqp://{0}:{1}@{2}:5672/%2f",
-            //            configuration["EventBusUserName"],
-            //            configuration["EventBusPassword"],
-            //            configuration["EventBusConnection"]),
-            //            name: "TriviaDotNetApi-rabbitmqbus-check",
-            //            tags: new string[] { "rabbitmqbus" });
-
+                    name: "DB-check",
+                    tags: new string[] { "db" });
 
             return services;
         }
@@ -378,7 +265,6 @@ namespace TriviaDotNetApi.API
             // Add framework services.
             services.AddMvc(options =>
             {
-                //options.Filters.Add(typeof(TenantAutomaticMigrateActionFilter));
             }).AddControllersAsServices();
 
             return services;

@@ -1,24 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Autofac;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Polly;
-using Serilog.Sinks.Graylog;
 using Autofac.Extensions.DependencyInjection;
 
 namespace TriviaDotNetApi.API
 {
     public class Program
     {
-
         public static readonly string Namespace = typeof(Program).Namespace;
         public static readonly string AppName = Namespace.Substring(Namespace.LastIndexOf('.', Namespace.LastIndexOf('.') - 1) + 1);
         public static void Main(string[] args)
@@ -34,10 +25,8 @@ namespace TriviaDotNetApi.API
                                                                 (exception, retryCount, timeSpan) => {
                                                                     Log.Logger.Error("-----------------------  Retrying " + retryCount + " Time");
                                                                 });
-
             webHost.Run();
         }
-
 
         public static IHost CreateWebHostBuilder(IConfiguration configuration, string[] args) =>
             Host.CreateDefaultBuilder(args)
@@ -49,7 +38,6 @@ namespace TriviaDotNetApi.API
                 })
                 .Build();
 
-
         private static Serilog.ILogger CreateSerilogLogger(IConfiguration configuration)
         {
 
@@ -57,13 +45,7 @@ namespace TriviaDotNetApi.API
                 .MinimumLevel.Verbose()
                 .Enrich.WithProperty("ApplicationContext", AppName)
                 .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.Graylog(new GraylogSinkOptions
-                {
-                    HostnameOrAddress = "graylog",
-                    Port = 12201
-                })
-                //.WriteTo.Http(string.IsNullOrWhiteSpace(logstashUrl) ? "http://logstash:8080" : logstashUrl)
+                .WriteTo.Console()           
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
         }

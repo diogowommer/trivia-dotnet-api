@@ -13,15 +13,12 @@ namespace TriviaDotNetApi.API
     public class TriviaDotNetApiController : ControllerBase
     {
         private readonly IMediator mediator;
-        private readonly IMapper mapper;
 
         public TriviaDotNetApiController(
-            IMediator mediator,
-            IMapper mapper
+            IMediator mediator
         )
         {
             this.mediator = mediator;
-            this.mapper = mapper;
         }
 
         /// <summary>
