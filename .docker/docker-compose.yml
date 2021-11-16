@@ -1,0 +1,27 @@
+version: "3.4"
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2017-latest-ubuntu
+    environment:
+      - SA_PASSWORD=huR*P!Zb952eHV
+      - ACCEPT_EULA=Y
+    ports:
+      - "1400:1433"
+
+
+  servicetrivia.api:
+    image: ${DOCKER_REGISTRY-}servicetriviaapi:${PLATFORM-linux}-${TAG:-latest}
+    build:
+      context: .
+      dockerfile: ../TriviaDotNetApi.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:80
+    ports:
+      - "5101:80"      
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+    depends_on:
+      - sqlserver

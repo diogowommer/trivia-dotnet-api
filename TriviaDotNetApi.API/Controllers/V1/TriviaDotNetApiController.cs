@@ -1,0 +1,62 @@
+using AutoMapper;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using TriviaDotNetApi.Application;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using CrossCutting.MessageHelpers;
+
+namespace TriviaDotNetApi.API
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class TriviaDotNetApiController : ControllerBase
+    {
+        private readonly IMediator mediator;
+        private readonly IMapper mapper;
+
+        public TriviaDotNetApiController(
+            IMediator mediator,
+            IMapper mapper
+        )
+        {
+            this.mediator = mediator;
+            this.mapper = mapper;
+        }
+
+        /// <summary>
+        /// 1° step - Run createTriviaCommand to create a trivia.
+        /// </summary>
+        /// <param name="CreateQuestionsTrivia"></param>
+        /// <returns></returns>
+        [HttpPost("[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<Response>> CreateQuestions(CreateTriviaCommand createTriviaCommand) =>
+               base.Ok(await this.mediator.Send(createTriviaCommand));
+
+        /// <summary>
+        /// 2° step - Run GetQuestionsTrivia to get a trivia list.
+        /// </summary>
+        /// <param name="GetQuestionsTrivia"></param>
+        /// <returns></returns>
+        [HttpGet("[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<Response>> GetQuestions([FromQuery] GetQuestionsCommand getQuestionsTriviaCommand)
+        {
+            return base.Ok(await this.mediator.Send(getQuestionsTriviaCommand));
+        }
+
+        /// <summary>
+        /// 3° step - Run GetQuestionsNoAnswersTrivia to get a trivia list.
+        /// </summary>
+        /// <param name="GetQuestionsTrivia"></param>
+        /// <returns></returns>
+        [HttpGet("[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<Response>> GetQuestionsNoAnswers([FromQuery] GetQuestionsNoAnswersCommand getQuestionsNoAnswersTrivia)
+        {
+            return base.Ok(await this.mediator.Send(getQuestionsNoAnswersTrivia));
+        }
+
+    }
+}

@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ServiceTrivia-deployment-DEPLOY_STATE
+spec:
+  selector:
+    matchLabels:
+      app: ServiceTrivia
+      version: DEPLOY_STATE
+  replicas: 1
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: ServiceTrivia
+        version: DEPLOY_STATE
+    spec:
+      containers:
+      - name: ServiceTrivia
+        image: DOCKER_REGISTRY/CI_PROJECT_NAME:DEPLOY_VERSION
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Docker
+        - name: DOTNET_SYSTEM_GLOBALIZATION_INVARIANT
+          value: "false"
+        - name: DB_USER
+          value: VAR_DB_USER
+        - name: DB_PWD
+          value: VAR_DB_PWD
+        - name: DB_HOST
+          value: VAR_DB_HOST
+        - name: VERSION
+          value: "__DATE__"
+        resources: {}
+      restartPolicy: Always
+status: {}
