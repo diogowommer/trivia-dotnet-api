@@ -5,13 +5,11 @@ using System;
 using Microsoft.Extensions.Configuration;
 using TriviaDotNetApi.Domain.AggregatesModel;
 using AutoMapper;
-using Saunter.Attributes;
 using System.Collections.Generic;
 using CrossCutting.MessageHelpers;
 
 namespace TriviaDotNetApi.Application
 {
-    [AsyncApi]
     public class CreateTriviaCommandHandler : IRequestHandler<CreateTriviaCommand, Response>
     {
         private readonly IConfiguration _configuration;
@@ -27,7 +25,6 @@ namespace TriviaDotNetApi.Application
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        [PublishOperation(typeof(CreateTriviaCommand))]
         public async Task<Response> Handle(CreateTriviaCommand request, CancellationToken cancellationToken)
         {
             await _repository.CreateAsync(_mapper.Map<ICollection<TriviaItem>>(request.Payload.results));
