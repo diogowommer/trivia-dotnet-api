@@ -41,10 +41,9 @@ namespace TriviaDotNetApi.API
         /// <returns></returns>
         [HttpGet("[action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Response>> GetQuestions([FromQuery] GetQuestionsCommand getQuestionsTriviaCommand)
-        {
-            return base.Ok(await this.mediator.Send(getQuestionsTriviaCommand));
-        }
+        public async Task<ActionResult<Response>> GetQuestions([FromQuery] GetQuestionsCommand getQuestionsTriviaCommand) =>
+            base.Ok(await this.mediator.Send(getQuestionsTriviaCommand));
+        
 
         /// <summary>
         /// 3° step - Run GetQuestionsNoAnswersTrivia to get a trivia list.
@@ -53,10 +52,9 @@ namespace TriviaDotNetApi.API
         /// <returns></returns>
         [HttpGet("[action]")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Response>> GetQuestionsNoAnswers([FromQuery] GetQuestionsNoAnswersCommand getQuestionsNoAnswersTrivia)
-        {
-            return base.Ok(await this.mediator.Send(getQuestionsNoAnswersTrivia));
-        }
+        public async Task<ActionResult<Response>> GetQuestionsNoAnswers([FromQuery] GetQuestionsNoAnswersCommand getQuestionsNoAnswersTrivia) =>
+            base.Ok(await this.mediator.Send(getQuestionsNoAnswersTrivia));
+        
 
     }
 }

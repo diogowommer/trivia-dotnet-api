@@ -32,7 +32,7 @@ namespace TriviaDotNetApi.API.Filters
         {
             if (actionContext.ActionArguments.ContainsKey(parameterName))
             {
-                var parameterDescriptor = actionContext.ActionDescriptor.Parameters.FirstOrDefault(p => p.Name == parameterName);
+                var parameterDescriptor = actionContext.ActionDescriptor.Parameters.FirstOrDefault(param => param.Name == parameterName);
                 if (parameterDescriptor != null && parameterDescriptor.ParameterType.IsArray)
                 {
                     var type = parameterDescriptor.ParameterType.GetElementType();
